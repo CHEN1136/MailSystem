@@ -22,10 +22,10 @@ namespace MailSystem
         #region 全局变量
 
         private TcpClient Server;
-        private NetworkStream StrmWtr;
-        private StreamReader StrmRdr;
+        private NetworkStream StrmWtr = Login.getStrmWtr;
+        private StreamReader StrmRdr = Login.getStrmRdr;
         private String cmdData;
-        private byte[] szData;
+        private byte[] szData = Login.getSZdata;
         private const String CRLF = "\r\n";
 
         #endregion
@@ -54,53 +54,6 @@ namespace MailSystem
 
         }
 
-        private void button2_Click(object sender, EventArgs e)
-        {
-            Cursor cr = Cursor.Current;
-            Cursor.Current = Cursors.WaitCursor;
-            Server = new TcpClient(this.textBox1.Text, 110);
-            this.listBox1.Items.Clear();
-
-            try
-            {
-                StrmWtr = Server.GetStream();
-                StrmRdr = new StreamReader(Server.GetStream());
-                this.getSatus();
-
-                string ret;
-
-                //Login
-                cmdData = "USER " + this.textBox2.Text + CRLF;
-                szData = System.Text.Encoding.ASCII.GetBytes(cmdData.ToCharArray());
-                StrmWtr.Write(szData, 0, szData.Length);
-                this.getSatus();
-
-                cmdData = "PASS " + this.textBox3.Text + CRLF;
-                szData = System.Text.Encoding.ASCII.GetBytes(cmdData.ToCharArray());
-                StrmWtr.Write(szData, 0, szData.Length);
-                ret = this.getSatus();
-                if (ret[0] == '-') throw new InvalidOperationException("用户名密码错误");
-
-                //Get Email's Info
-                cmdData = "STAT" + CRLF;
-                szData = System.Text.Encoding.ASCII.GetBytes(cmdData.ToCharArray());
-                StrmWtr.Write(szData, 0, szData.Length);
-                this.getSatus();
-
-                this.connectbtn.Enabled = false;
-                this.disconnectbtn.Enabled = true;
-                this.save.Enabled = true;
-
-            }
-            catch (InvalidOperationException err)
-            {
-                this.listBox1.Items.Add("ERROR: " + err.Message.ToString());
-            }
-            finally
-            {
-                Cursor.Current = cr;
-            }
-        }
 
         private void disconnectbtn_Click(object sender, EventArgs e)
         {
@@ -115,12 +68,14 @@ namespace MailSystem
 
             StrmWtr.Close();
             StrmRdr.Close();
-
-            this.connectbtn.Enabled = true;
-            this.disconnectbtn.Enabled = false;
-            this.save.Enabled = false;
+            
 
             Cursor.Current = cr;
+            Login lf = new Login();
+            lf.Show();
+            this.Hide();
+
+
         }
 
         private void readbtn_Click(object sender, EventArgs e)
@@ -179,13 +134,7 @@ namespace MailSystem
 
 
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            this.Hide();
-            Form2 f2 = new Form2();
-            f2.Show();
-           
-        }
+
 
         private void Delbtn_Click(object sender, EventArgs e)
         {
@@ -205,9 +154,6 @@ namespace MailSystem
                 StrmWtr.Close();
                 StrmRdr.Close();
 
-                this.connectbtn.Enabled = true;
-                this.disconnectbtn.Enabled = false;
-                this.save.Enabled = false;
                 
 
             }
@@ -221,7 +167,6 @@ namespace MailSystem
             this.richTextBox1.Clear();
 
         }
-
 
     }
 }

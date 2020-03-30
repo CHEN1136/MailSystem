@@ -19,14 +19,13 @@ namespace MailSystem
             InitializeComponent();
         }
         #region 全局变量
-
         private TcpClient Server;
-        private NetworkStream StrmWtr;
-        private StreamReader StrmRdr;
-        private String cmdData;
-        private byte[] szData;
+        private NetworkStream StrmWtr = Login.getStrmWtr;
+        private StreamReader StrmRdr = Login.getStrmRdr;
+        private String cmdData = Login.getcmdData;
+        private byte[] szData = Login.getSZdata;
         private const String CRLF = "\r\n";
-
+        private string Sender = Login.getsender;
         #endregion
 
         #region 全局函数
@@ -40,53 +39,7 @@ namespace MailSystem
 
         #endregion
 
-        private void conbtn_Click(object sender, EventArgs e)
-        {
-            Cursor cr = Cursor.Current;
-            Cursor.Current = Cursors.WaitCursor;
-            Server = new TcpClient(this.textBox1.Text, 25);
-            this.listBox1.Items.Clear();
-            try
-            {
-                StrmWtr = Server.GetStream();
-                StrmRdr = new StreamReader(Server.GetStream());
-                this.GetSatus();
-
-                //Login
-                cmdData = "HELO " + this.textBox1.Text + CRLF;
-                szData = System.Text.Encoding.ASCII.GetBytes(cmdData.ToCharArray());
-                StrmWtr.Write(szData, 0, szData.Length);
-                this.GetSatus();
-
-                cmdData = "AUTH LOGIN" + CRLF;
-                szData = System.Text.Encoding.ASCII.GetBytes(cmdData.ToCharArray());
-                StrmWtr.Write(szData, 0, szData.Length);
-                this.GetSatus();
-
-                cmdData = Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes(this.textBox4.Text)) + CRLF;
-                szData = System.Text.Encoding.ASCII.GetBytes(cmdData.ToCharArray());
-                StrmWtr.Write(szData, 0, szData.Length);
-                this.GetSatus();
-
-                cmdData = Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes(this.textBox2.Text)) + CRLF;
-                szData = System.Text.Encoding.ASCII.GetBytes(cmdData.ToCharArray());
-                StrmWtr.Write(szData, 0, szData.Length);
-                this.GetSatus();
-
-
-                this.conbtn.Enabled = false;
-                this.disconbtn.Enabled = true;
-
-            }
-            catch (InvalidOperationException err)
-            {
-                this.listBox1.Items.Add("ERROR: " + err.ToString());
-            }
-            finally
-            {
-                Cursor.Current = cr;
-            }
-        }
+   
 
         private void disconbtn_Click(object sender, EventArgs e)
         {
@@ -102,12 +55,11 @@ namespace MailSystem
             StrmWtr.Close();
             StrmRdr.Close();
 
-
-            this.conbtn.Enabled = true;
-            this.disconbtn.Enabled = false;
-
             Cursor.Current = cr;
-
+            
+            Login lf = new Login();
+            lf.Show();
+            this.Hide();
         }
 
         private void sendbtn_Click(object sender, EventArgs e)
@@ -115,13 +67,13 @@ namespace MailSystem
             try
             {
                 //Send Email
-                cmdData = "MAIL FROM: <" + this.textBox3.Text + ">" + CRLF;
+                cmdData = "MAIL FROM: <" + Sender + ">" + CRLF;
                 szData = System.Text.Encoding.ASCII.GetBytes(cmdData.ToCharArray());
                 StrmWtr.Write(szData, 0, szData.Length);
                 this.GetSatus();
 
                 //抄送自己的邮箱以防被当成垃圾邮件
-                cmdData = "RCPT TO: <" + this.textBox3.Text + ">" + CRLF;
+                cmdData = "RCPT TO: <" + Sender + ">" + CRLF;
                 szData = System.Text.Encoding.ASCII.GetBytes(cmdData.ToCharArray());
                 StrmWtr.Write(szData, 0, szData.Length);
                 this.GetSatus();
@@ -139,7 +91,7 @@ namespace MailSystem
                 StrmWtr.Write(szData, 0, szData.Length);
                 this.GetSatus();
 
-                cmdData = "from: " + this.textBox3.Text + CRLF
+                cmdData = "from: " + Sender + CRLF
                             + "to: " + this.textBox5.Text + CRLF
                             + "subject: " + this.textBox6.Text + CRLF + CRLF
                             + this.richTextBox1.Text + CRLF + "." + CRLF;
@@ -150,6 +102,8 @@ namespace MailSystem
             }
             catch (InvalidOperationException err)
             {
+                MessageBox.Show(Sender);
+
                 this.listBox1.Items.Add("ERROR: " + err.ToString());
             }
         }
